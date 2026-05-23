@@ -1,0 +1,55 @@
+Usuario  { ID, Nombre, Email, Password }
+
+Equipo   { ID, Nombre, Descripcion, OwnerID }
+
+Miembro  { ID, EquipoID, UsuarioID, Rol }
+
+Tarea    { ID, Titulo, Descripcion, Estado, 
+           Prioridad, FechaLimite, EquipoID, AsignadoID }
+
+////controllers
+
+Equipo: 
+CrearEquipo      → crea un equipo, el OwnerID lo saca del token
+ObtenerEquipos   → lista todos los equipos del usuario autenticado
+ObtenerEquipo    → trae un equipo por ID con sus miembros y tareas
+EliminarEquipo   → solo el dueño puede eliminar (verifica OwnerID)
+
+
+Miembro: 
+AgregarMiembro   → agrega un usuario a un equipo con un rol
+                   el rol puede ser "admin" o "miembro"
+ObtenerMiembros  → lista todos los miembros de un equipo
+EliminarMiembro  → elimina un miembro del equipo
+
+Tarea:
+CrearTarea       → crea una tarea dentro de un equipo
+                   el EquipoID viene de la URL /equipos/:id/tareas
+                   el estado inicial siempre es "pendiente"
+ObtenerTareas    → lista todas las tareas de un equipo
+ObtenerTarea     → trae una tarea por ID
+EditarTarea      → edita título, descripción, prioridad, asignado
+CambiarEstado    → solo actualiza el campo estado con PATCH
+                   los estados son: pendiente, en_progreso, completada
+EliminarTarea    → elimina una tarea
+
+///////ENRUTAMIENTO
+RUTAS:
+POST   /registro
+POST   /login
+
+POST   /equipos                          → CrearEquipo
+GET    /equipos                          → ObtenerEquipos
+GET    /equipos/:id                      → ObtenerEquipo
+DELETE /equipos/:id                      → EliminarEquipo
+
+POST   /equipos/:id/miembros             → AgregarMiembro
+GET    /equipos/:id/miembros             → ObtenerMiembros
+DELETE /equipos/:id/miembros/:usuarioId  → EliminarMiembro
+
+POST   /equipos/:id/tareas               → CrearTarea
+GET    /equipos/:id/tareas               → ObtenerTareas
+GET    /tareas/:id                       → ObtenerTarea
+PUT    /tareas/:id                       → EditarTarea
+PATCH  /tareas/:id/estado                → CambiarEstado
+DELETE /tareas/:id                       → EliminarTarea
