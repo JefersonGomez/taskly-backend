@@ -6,7 +6,8 @@ import "gorm.io/gorm"
 
 type Usuario struct {
 	gorm.Model
-	Nombre   string `json:"nombre"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Nombre   string   `json:"nombre"`
+	Email    string   `json:"email"`
+	Password string   `json:"password"`
+	Equipos  []Equipo `json:"equipos" gorm:"foreingKey:OwnerID"`
 }

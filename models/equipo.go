@@ -6,7 +6,9 @@ import "gorm.io/gorm"
 
 type Equipo struct {
 	gorm.Model
-	Nombre      string `json:"nombre"`
-	Descripcion string `json:"descripcion"`
-	OwnerID     uint   `json:"ownerid"`
+	Nombre      string    `json:"nombre"`
+	Descripcion string    `json:"descripcion"`
+	OwnerID     uint      `json:"ownerid"`
+	Tareas      []Tarea   `json:"tareas" gomr:"foreingKey:EquipoID"`
+	Miembros    []Miembro `json:"miembros" gorm:"foreingKey:EquipoID"`
 }
