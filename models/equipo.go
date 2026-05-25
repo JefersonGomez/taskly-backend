@@ -9,6 +9,6 @@ type Equipo struct {
 	Nombre      string    `json:"nombre"`
 	Descripcion string    `json:"descripcion"`
 	OwnerID     uint      `json:"ownerid"`
-	Tareas      []Tarea   `json:"tareas" gomr:"foreingKey:EquipoID"`
-	Miembros    []Miembro `json:"miembros" gorm:"foreingKey:EquipoID"`
+	Tareas      []Tarea   `json:"tareas" gomr:"foreignKey:EquipoID"`
+	Miembros    []Miembro `json:"miembros" gorm:"foreignKey:EquipoID"`
 }

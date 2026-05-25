@@ -9,6 +9,6 @@ type Miembro struct {
 	EquipoID  uint    `json:"equipoid"`
 	UsuarioID uint    `json:"usuarioid"`
 	Rol       string  `json:"rol"`
-	Usuario   Usuario `json:"usuario" gorm:"foreingKey:usuarioID"`
-	Equipo    Equipo  `json:"equipo" gorm:"foreingKey:equipoID"`
+	Usuario   Usuario `json:"usuario" gorm:"foreignKey:usuarioID"`
+	Equipo    Equipo  `json:"equipo" gorm:"foreignKey:equipoID"`
 }

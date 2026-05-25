@@ -9,5 +9,5 @@ type Usuario struct {
 	Nombre   string   `json:"nombre"`
 	Email    string   `json:"email"`
 	Password string   `json:"password"`
-	Equipos  []Equipo `json:"equipos" gorm:"foreingKey:OwnerID"`
+	Equipos  []Equipo `json:"equipos" gorm:"foreignKey:OwnerID"`
 }

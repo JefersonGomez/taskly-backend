@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Registror(c *gin.Context) {
+func Registro(c *gin.Context) {
 
 	var usuario models.Usuario
 

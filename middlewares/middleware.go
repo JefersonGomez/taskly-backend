@@ -14,7 +14,7 @@ func ValidarToken(c *gin.Context) {
 
 	if header == "" {
 
-		c.JSON(400, gin.H{"error": "token requerido"})
+		c.JSON(401, gin.H{"error": "token invalido"})
 		c.Abort()
 		return
 	}

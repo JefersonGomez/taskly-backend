@@ -5,6 +5,7 @@ import (
 	"os"
 	"taskly-backend/controller"
 	"taskly-backend/models"
+	"taskly-backend/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -35,6 +36,8 @@ func main() {
 	models.MigrarTablas(db)
 
 	r := gin.Default()
+
+	routes.SetupRoutes(r)
 
 	r.Run(":7000")
 
