@@ -26,7 +26,7 @@ func CrearTarea(c *gin.Context) {
 		return
 	}
 	tarea.EquipoID = uint(idEquipo)
-	tarea.Estado = "pendiente"
+	tarea.Estado = "backlog"
 	DB.Create(&tarea)
 
 	// retornar la tarea con el asignado cargado
@@ -110,7 +110,7 @@ func CambiarEstado(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "datos incorrectos"})
 		return
 	}
-	if body.Estado != "pendiente" && body.Estado != "en_progreso" && body.Estado != "completada" {
+	if body.Estado != "backlog" && body.Estado != "pendiente" && body.Estado != "en_progreso" && body.Estado != "completada" {
 		c.JSON(400, gin.H{"error": "estado no permitido"})
 		return
 	}
