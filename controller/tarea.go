@@ -28,9 +28,6 @@ func CrearTarea(c *gin.Context) {
 	tarea.EquipoID = uint(idEquipo)
 	tarea.Estado = "backlog"
 	DB.Create(&tarea)
-
-	// retornar la tarea con el asignado cargado
-	DB.Preload("Asignado").First(&tarea, tarea.ID)
 	c.JSON(201, tarea)
 }
 
@@ -48,8 +45,26 @@ func ObtenerTareas(c *gin.Context) {
 		return
 	}
 	var tareas []models.Tarea
-	DB.Preload("Asignado").Where("equipo_id = ?", idEquipo).Find(&tareas)
-	c.JSON(200, tareas)
+	DB.Where("equipo_id = ?", idEquipo).Find(&tareas)
+
+	// para cada tarea buscar el usuario asignado
+	type TareaConAsignado struct {
+		models.Tarea
+		NombreAsignado string `json:"nombreAsignado"`
+	}
+
+	var result []TareaConAsignado
+	for _, t := range tareas {
+		item := TareaConAsignado{Tarea: t}
+		if t.AsignadoID != 0 {
+			var usuario models.Usuario
+			DB.First(&usuario, t.AsignadoID)
+			item.NombreAsignado = usuario.Nombre
+		}
+		result = append(result, item)
+	}
+
+	c.JSON(200, result)
 }
 
 func ObtenerTarea(c *gin.Context) {
@@ -60,7 +75,7 @@ func ObtenerTarea(c *gin.Context) {
 		return
 	}
 	var tarea models.Tarea
-	resultado := DB.Preload("Asignado").First(&tarea, idTarea)
+	resultado := DB.First(&tarea, idTarea)
 	if resultado.Error != nil {
 		c.JSON(404, gin.H{"error": "tarea no encontrada"})
 		return
@@ -86,7 +101,6 @@ func EditarTarea(c *gin.Context) {
 		return
 	}
 	DB.Save(&tarea)
-	DB.Preload("Asignado").First(&tarea, tarea.ID)
 	c.JSON(200, tarea)
 }
 

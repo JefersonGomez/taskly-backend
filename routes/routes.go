@@ -34,6 +34,9 @@ func SetupRoutes(c *gin.Engine) {
 		p.PATCH("/tareas/:id/estado", controller.CambiarEstado)
 		p.DELETE("/tareas/:id", controller.EliminarTarea)
 
+		//busqueda
+		p.GET("/usuarios/buscar", controller.BuscarUsuario)
+
 	}
 
 }

@@ -76,3 +76,23 @@ func Login(c *gin.Context) {
 	c.JSON(200, gin.H{"token": tokenString})
 
 }
+
+func BuscarUsuario(c *gin.Context) {
+	email := c.Query("email")
+
+	var usuario models.Usuario
+
+	resultado := DB.Where("email = ?", email).First(&usuario)
+
+	if resultado != nil {
+		c.JSON(404, gin.H{"error": "no se encontro ninguna concidencia con email"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"Id":     usuario.ID,
+		"nombre": usuario.Nombre,
+		"email":  usuario.Email,
+	})
+
+}
