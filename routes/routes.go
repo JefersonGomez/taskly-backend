@@ -39,7 +39,7 @@ func SetupRoutes(c *gin.Engine) {
 
 		//Actualizar perfil
 		p.GET("/me", controller.ObtenerPerfil)
-		p.GET("/me", controller.ActualizarPerfil)
+		p.PUT("/me", controller.ActualizarPerfil)
 
 	}
 

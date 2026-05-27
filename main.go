@@ -1,15 +1,25 @@
+// @title           Taskly API
+// @version         1.0.0
+// @description     Documentación automática del backend de Taskly
+// @host            localhost:7000
+// @BasePath        /
+// @schemes         http
+
 package main
 
 import (
 	"fmt"
 	"os"
 	"taskly-backend/controller"
+	_ "taskly-backend/docs" // 👈 AGREGA ESTO (con guion bajo _)
 	"taskly-backend/models"
 	"taskly-backend/routes"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -37,7 +47,7 @@ func main() {
 	models.MigrarTablas(db)
 
 	r := gin.Default()
-
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},

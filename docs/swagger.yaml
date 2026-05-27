@@ -1,0 +1,280 @@
+basePath: /
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.Equipo:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      descripcion:
+        type: string
+      id:
+        type: integer
+      miembros:
+        items:
+          $ref: '#/definitions/models.Miembro'
+        type: array
+      nombre:
+        type: string
+      ownerid:
+        type: integer
+      tareas:
+        items:
+          $ref: '#/definitions/models.Tarea'
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  models.ErrorResponse:
+    properties:
+      code:
+        example: 400
+        type: integer
+      error:
+        example: Datos inválidos
+        type: string
+      message:
+        example: Campo requerido
+        type: string
+    type: object
+  models.MessageResponse:
+    properties:
+      message:
+        example: Operación exitosa
+        type: string
+    type: object
+  models.Miembro:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      equipo:
+        $ref: '#/definitions/models.Equipo'
+      equipoid:
+        type: integer
+      id:
+        type: integer
+      rol:
+        type: string
+      updatedAt:
+        type: string
+      usuario:
+        $ref: '#/definitions/models.Usuario'
+      usuarioid:
+        type: integer
+    type: object
+  models.Tarea:
+    properties:
+      asignadoid:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      descripcion:
+        type: string
+      equipoid:
+        type: integer
+      estado:
+        type: string
+      fechaLimite:
+        type: string
+      id:
+        type: integer
+      prioridad:
+        type: string
+      titulo:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.Usuario:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      equipos:
+        items:
+          $ref: '#/definitions/models.Equipo'
+        type: array
+      id:
+        type: integer
+      nombre:
+        type: string
+      password:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+host: localhost:7000
+info:
+  contact: {}
+  description: Documentación automática del backend de Taskly
+  title: Taskly API
+  version: 1.0.0
+paths:
+  /equipos:
+    get:
+      consumes:
+      - application/json
+      description: Retorna todos los equipos donde el usuario es propietario o miembro.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de equipos obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/models.Equipo'
+            type: array
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar equipos del usuario autenticado
+      tags:
+      - Equipos
+    post:
+      consumes:
+      - application/json
+      description: Crea un equipo asignando automáticamente al usuario autenticado
+        (vía JWT) como propietario.
+      parameters:
+      - description: Datos para crear el equipo
+        in: body
+        name: equipo
+        required: true
+        schema:
+          $ref: '#/definitions/models.Equipo'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Equipo creado exitosamente
+          schema:
+            $ref: '#/definitions/models.Equipo'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear un nuevo equipo de trabajo
+      tags:
+      - Equipos
+  /equipos/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina permanentemente un equipo. Solo el propietario (OwnerID)
+        puede realizar esta acción.
+      parameters:
+      - description: ID del equipo a eliminar
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Equipo eliminado exitosamente
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Permisos insuficientes
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Equipo no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar un equipo por ID
+      tags:
+      - Equipos
+    get:
+      consumes:
+      - application/json
+      description: Retorna los datos de un equipo específico, incluyendo miembros
+        y tareas asociadas.
+      parameters:
+      - description: ID del equipo
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Datos del equipo obtenidos exitosamente
+          schema:
+            $ref: '#/definitions/models.Equipo'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Acceso denegado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Equipo no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener un equipo por ID
+      tags:
+      - Equipos
+schemes:
+- http
+swagger: "2.0"
