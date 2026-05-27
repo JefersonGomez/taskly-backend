@@ -37,6 +37,10 @@ func SetupRoutes(c *gin.Engine) {
 		//busqueda
 		p.GET("/usuarios/buscar", controller.BuscarUsuario)
 
+		//Actualizar perfil
+		p.GET("/me", controller.ObtenerPerfil)
+		p.GET("/me", controller.ActualizarPerfil)
+
 	}
 
 }

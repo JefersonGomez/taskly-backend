@@ -96,3 +96,73 @@ func BuscarUsuario(c *gin.Context) {
 	})
 
 }
+
+func ObtenerPerfil(c *gin.Context) {
+
+	idUsuario := c.GetUint("id")
+	var usuario models.Usuario
+
+	resultado := DB.First(&usuario, idUsuario)
+
+	if resultado.Error != nil {
+		c.JSON(404, gin.H{"error": "No se encontro el perfil de usuario logueado"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"id":     usuario.ID,
+		"nombre": usuario.Nombre,
+		"email":  usuario.Email,
+	})
+}
+
+func ActualizarPerfil(c *gin.Context) {
+
+	idUsuario := c.GetUint("id")
+
+	var body struct {
+		Nombre   string `json:"nombre"`
+		Password string `json:"password"`
+	}
+
+	if err := c.BindJSON(&body); err != nil {
+
+		c.JSON(400, gin.H{"error": "Los  datos que ingresaste son incorrectos"})
+		return
+	}
+
+	var usuario models.Usuario
+
+	resultado := DB.First(&usuario, idUsuario)
+
+	if resultado.Error != nil {
+		c.JSON(404, gin.H{"error": "No se encontro el usuario"})
+		return
+	}
+
+	if body.Nombre != "" {
+		usuario.Nombre = body.Nombre
+
+	}
+
+	if body.Password != "" {
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
+
+		if err != nil {
+			c.JSON(400, gin.H{"error": "No se pudo encriptar la contraseña"})
+			return
+		}
+
+		usuario.Password = string(hash)
+
+	}
+	DB.Save(&usuario)
+
+	c.JSON(200, gin.H{
+		"id":     usuario.ID,
+		"nombre": usuario.Nombre,
+		"email":  usuario.Email,
+	})
+
+}

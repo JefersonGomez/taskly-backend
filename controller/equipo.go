@@ -23,7 +23,7 @@ func ObtenerEquipos(c *gin.Context) {
 	usuarioID := c.GetUint("id")
 
 	var equiposDueno []models.Equipo
-	DB.Preload("Miembros.Usuario").Preload("Tareas").Where("owner_id = ?", usuarioID).Find(&equiposDueno)
+	DB.Where("owner_id = ?", usuarioID).Find(&equiposDueno)
 
 	var miembros []models.Miembro
 	DB.Where("usuario_id = ?", usuarioID).Find(&miembros)
@@ -31,14 +31,13 @@ func ObtenerEquipos(c *gin.Context) {
 	var equiposMiembro []models.Equipo
 	for _, m := range miembros {
 		var equipo models.Equipo
-		DB.Preload("Miembros.Usuario").Preload("Tareas").First(&equipo, m.EquipoID)
+		DB.First(&equipo, m.EquipoID)
 		equiposMiembro = append(equiposMiembro, equipo)
 	}
 
 	equipos := append(equiposDueno, equiposMiembro...)
 	c.JSON(200, equipos)
 }
-
 func ObtenerEquipo(c *gin.Context) {
 	var equipo models.Equipo
 	idEquipo := c.Param("id")
