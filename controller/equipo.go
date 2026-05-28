@@ -3,7 +3,6 @@ package controller
 import (
 	"strconv"
 	"taskly-backend/models"
-	"taskly-backend/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -174,23 +173,4 @@ func EliminarEquipo(c *gin.Context) {
 	}
 
 	c.JSON(200, models.MessageResponse{Message: "equipo eliminado correctamente"})
-}
-
-// TestEmail godoc
-// @Summary Probar envío de email
-// @Tags Debug
-// @Router /debug/test-email [post]
-func TestEmail(c *gin.Context) {
-	err := utils.SendNotificationEmail(
-		"gomesjeje504@gmail.com", // ← Tu email real
-		"Usuario Test",
-		"Equipo Test",
-		"miembro",
-		"Admin Taskly",
-	)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"message": "Email enviado. Revisa tu bandeja"})
 }

@@ -13,9 +13,6 @@ func SetupRoutes(c *gin.Engine) {
 	c.POST("/registro", controller.Registro)
 	c.POST("/login", controller.Login)
 
-	// 🔹 Endpoint de prueba para emails (sin token, solo desarrollo)
-	c.POST("/debug/test-email", controller.TestEmail)
-
 	// 🔹 Rutas protegidas (requieren token)
 	p := c.Group("/")
 	p.Use(middlewares.ValidarToken)
