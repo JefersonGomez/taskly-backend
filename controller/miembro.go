@@ -1,15 +1,18 @@
 package controller
 
 import (
+	"log"
 	"strconv"
 	"taskly-backend/models"
+	"taskly-backend/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 // AgregarMiembro godoc
 // @Summary      Agregar un miembro a un equipo
-// @Description  Crea un registro de miembro y lo asocia a un equipo existente. Solo el propietario del equipo puede realizar esta acción.
+// @Description  Crea un registro de miembro y lo asocia a un equipo existente. Solo el propietario del equipo puede realizar esta acción. Envía notificación por email al usuario agregado.
 // @Tags         Miembros
 // @Accept       json
 // @Produce      json
@@ -23,31 +26,77 @@ import (
 // @Failure      500      {object}  models.ErrorResponse  "Error interno del servidor"
 // @Router       /equipos/{id}/miembros [post]
 func AgregarMiembro(c *gin.Context) {
-	var equipo models.Equipo
+	// Obtener ID del equipo desde la ruta
 	idEquipo := c.Param("id")
-	id, err := strconv.Atoi(idEquipo)
+	equipoID, err := strconv.Atoi(idEquipo)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "id incorrecto"})
 		return
 	}
-	resultado := DB.First(&equipo, id)
+
+	// Verificar que el equipo existe
+	var equipo models.Equipo
+	resultado := DB.First(&equipo, equipoID)
 	if resultado.Error != nil {
 		c.JSON(404, gin.H{"error": "equipo no encontrado"})
 		return
 	}
+
+	// Bind del request body
 	var miembro models.Miembro
 	if err := c.BindJSON(&miembro); err != nil {
 		c.JSON(400, gin.H{"error": "datos incorrectos"})
 		return
 	}
+
+	// Validar rol
 	if miembro.Rol != "admin" && miembro.Rol != "miembro" {
 		c.JSON(400, gin.H{"error": "rol inválido, debe ser admin o miembro"})
 		return
 	}
-	miembro.EquipoID = equipo.ID
-	DB.Create(&miembro)
 
-	// retornar el miembro con el usuario cargado
+	// Obtener datos del usuario que será agregado
+	var usuarioAGregar models.Usuario
+	if err := DB.First(&usuarioAGregar, miembro.UsuarioID).Error; err != nil {
+		c.JSON(404, gin.H{"error": "usuario no encontrado"})
+		return
+	}
+
+	// Obtener datos del usuario que está invitando (para el email)
+	invitedByID := c.GetUint("id")
+	var invitedByUser models.Usuario
+	DB.First(&invitedByUser, invitedByID)
+	invitedByName := invitedByUser.Nombre
+	if invitedByName == "" {
+		invitedByName = "Un miembro del equipo"
+	}
+
+	// Asignar equipo y crear miembro
+	miembro.EquipoID = uint(equipoID)
+	if err := DB.Create(&miembro).Error; err != nil {
+		c.JSON(500, gin.H{"error": "error al agregar el miembro"})
+		return
+	}
+
+	// 📧 ENVIAR EMAIL EN BACKGROUND (no bloquea la respuesta)
+	go func() {
+		// Pequeño delay para asegurar que la transacción de BD terminó
+		time.Sleep(500 * time.Millisecond)
+
+		err := utils.SendNotificationEmail(
+			usuarioAGregar.Email,
+			usuarioAGregar.Nombre,
+			equipo.Nombre,
+			miembro.Rol,
+			invitedByName,
+		)
+		// Si falla el email, solo logueamos (no afectamos la respuesta principal)
+		if err != nil {
+			log.Printf("⚠️ No se pudo enviar email a %s: %v", usuarioAGregar.Email, err)
+		}
+	}()
+
+	// Retornar respuesta con usuario preload
 	DB.Preload("Usuario").First(&miembro, miembro.ID)
 	c.JSON(201, miembro)
 }

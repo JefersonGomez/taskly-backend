@@ -315,7 +315,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Crea un registro de miembro y lo asocia a un equipo existente. Solo el propietario del equipo puede realizar esta acción.",
+                "description": "Crea un registro de miembro y lo asocia a un equipo existente. Solo el propietario del equipo puede realizar esta acción. Envía notificación por email al usuario agregado.",
                 "consumes": [
                     "application/json"
                 ],
