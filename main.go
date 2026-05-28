@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"os"
 	"taskly-backend/controller"
-	_ "taskly-backend/docs" // 👈 AGREGA ESTO (con guion bajo _)
+	_ "taskly-backend/docs"
 	"taskly-backend/models"
 	"taskly-backend/routes"
 
@@ -27,7 +27,9 @@ import (
 func main() {
 
 	godotenv.Load()
+
 	dsn := os.Getenv("DB_URL")
+
 	if dsn == "" {
 		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 			os.Getenv("DB_HOST"),
@@ -37,27 +39,33 @@ func main() {
 			os.Getenv("DB_PORT"),
 		)
 	}
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
+	fmt.Println("DSN usado:", dsn) // log temporal
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("No se pudo conectar a la base de datos...")
 	}
 
 	controller.DB = db
-
 	models.MigrarTablas(db)
 
 	r := gin.Default()
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "https://taskly-frontend.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
 
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	routes.SetupRoutes(r)
 
-	r.Run(":7000")
-
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "7000"
+	}
+	r.Run(":" + port)
 }
