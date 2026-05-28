@@ -25,11 +25,9 @@ import (
 )
 
 func main() {
-
 	godotenv.Load()
 
 	dsn := os.Getenv("DB_URL")
-
 	if dsn == "" {
 		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 			os.Getenv("DB_HOST"),
@@ -40,7 +38,7 @@ func main() {
 		)
 	}
 
-	fmt.Println("DSN usado:", dsn) // log temporal
+	fmt.Println("DSN usado:", dsn)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -52,10 +50,14 @@ func main() {
 
 	r := gin.Default()
 
+	// ✅ CORS corregido
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "https://taskly-frontend.vercel.app"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"https://taskly-frontend-ruby.vercel.app", // ← URL exacta con -ruby
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},  // ← + OPTIONS
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept"}, // ← + Accept
 		AllowCredentials: true,
 	}))
 
