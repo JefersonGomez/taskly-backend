@@ -45,6 +45,23 @@ definitions:
         example: Campo requerido
         type: string
     type: object
+  models.LoginRequest:
+    description: Credenciales requeridas para autenticación
+    properties:
+      email:
+        example: ana@example.com
+        type: string
+      password:
+        example: MiClave123
+        type: string
+    type: object
+  models.LoginResponse:
+    description: Contiene el token JWT para autenticar requests posteriores
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
   models.MessageResponse:
     properties:
       message:
@@ -72,6 +89,19 @@ definitions:
       usuarioid:
         type: integer
     type: object
+  models.RegisterRequest:
+    description: Información requerida para crear una cuenta
+    properties:
+      email:
+        example: ana@example.com
+        type: string
+      nombre:
+        example: Ana López
+        type: string
+      password:
+        example: MiClave123
+        type: string
+    type: object
   models.Tarea:
     properties:
       asignadoid:
@@ -95,6 +125,70 @@ definitions:
       titulo:
         type: string
       updatedAt:
+        type: string
+    type: object
+  models.TareaConAsignadoResponse:
+    description: Respuesta de tarea que incluye el nombre del miembro asignado (si
+      existe)
+    properties:
+      asignado_id:
+        example: 5
+        type: integer
+      created_at:
+        example: "2026-05-28T10:00:00Z"
+        type: string
+      descripcion:
+        example: Corregir error en autenticación
+        type: string
+      equipo_id:
+        example: 3
+        type: integer
+      estado:
+        example: en_progreso
+        type: string
+      id:
+        example: 1
+        type: integer
+      nombreAsignado:
+        example: Ana López
+        type: string
+      titulo:
+        example: Fix login bug
+        type: string
+    type: object
+  models.UpdateEstadoRequest:
+    description: Solo contiene el campo estado con valores permitidos
+    properties:
+      estado:
+        enum:
+        - backlog
+        - pendiente
+        - en_progreso
+        - completada
+        example: en_progreso
+        type: string
+    type: object
+  models.UpdateProfileRequest:
+    description: Campos opcionales para actualizar. Solo los enviados serán modificados.
+    properties:
+      nombre:
+        example: Ana López Actualizado
+        type: string
+      password:
+        example: NuevaClave456
+        type: string
+    type: object
+  models.UserProfileResponse:
+    description: Datos visibles del usuario autenticado
+    properties:
+      email:
+        example: ana@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      nombre:
+        example: Ana López
         type: string
     type: object
   models.Usuario:
@@ -275,6 +369,589 @@ paths:
       summary: Obtener un equipo por ID
       tags:
       - Equipos
+  /equipos/{id}/miembros:
+    get:
+      consumes:
+      - application/json
+      description: Retorna la lista de usuarios que son miembros de un equipo específico,
+        incluyendo su rol y datos básicos.
+      parameters:
+      - description: ID del equipo
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de miembros obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/models.Miembro'
+            type: array
+        "400":
+          description: ID de equipo inválido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Equipo no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener miembros de un equipo
+      tags:
+      - Miembros
+    post:
+      consumes:
+      - application/json
+      description: Crea un registro de miembro y lo asocia a un equipo existente.
+        Solo el propietario del equipo puede realizar esta acción.
+      parameters:
+      - description: ID del equipo
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos del miembro a agregar
+        in: body
+        name: miembro
+        required: true
+        schema:
+          $ref: '#/definitions/models.Miembro'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Miembro agregado exitosamente
+          schema:
+            $ref: '#/definitions/models.Miembro'
+        "400":
+          description: Datos inválidos o ID incorrecto
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Equipo no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Agregar un miembro a un equipo
+      tags:
+      - Miembros
+  /equipos/{id}/miembros/{usuarioId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remueve permanentemente la relación de un usuario con un equipo.
+        Solo el propietario del equipo puede realizar esta acción.
+      parameters:
+      - description: ID del equipo
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID del usuario a eliminar
+        example: 5
+        in: path
+        name: usuarioId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Miembro eliminado exitosamente
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+        "400":
+          description: IDs inválidos o formato incorrecto
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Permisos insuficientes
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Miembro no encontrado en este equipo
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar un miembro de un equipo
+      tags:
+      - Miembros
+  /equipos/{id}/tareas:
+    get:
+      consumes:
+      - application/json
+      description: Retorna todas las tareas asociadas a un equipo específico, incluyendo
+        el nombre del usuario asignado (si existe).
+      parameters:
+      - description: ID del equipo
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de tareas obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/models.TareaConAsignadoResponse'
+            type: array
+        "400":
+          description: ID de equipo inválido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Equipo no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar tareas de un equipo
+      tags:
+      - Tareas
+    post:
+      consumes:
+      - application/json
+      description: Crea una tarea dentro de un equipo específico y la inicializa en
+        estado "backlog". Opcionalmente se puede asignar a un miembro.
+      parameters:
+      - description: ID del equipo
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Datos de la tarea a crear
+        in: body
+        name: datos
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tarea'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tarea creada exitosamente
+          schema:
+            $ref: '#/definitions/models.Tarea'
+        "400":
+          description: ID de equipo inválido o datos incorrectos
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Equipo no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear una nueva tarea en un equipo
+      tags:
+      - Tareas
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Autentica al usuario con email y contraseña. Retorna un token JWT
+        válido por 24 horas para usar en endpoints protegidos.
+      parameters:
+      - description: Credenciales de acceso
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login exitoso
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Datos de entrada inválidos
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Usuario no encontrado o contraseña incorrecta
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Iniciar sesión de usuario
+      tags:
+      - Auth
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Retorna los datos públicos del usuario que inició sesión, obtenidos
+        desde el token JWT.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Perfil obtenido exitosamente
+          schema:
+            $ref: '#/definitions/models.UserProfileResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener perfil del usuario autenticado
+      tags:
+      - Usuarios
+    put:
+      consumes:
+      - application/json
+      description: Permite modificar el nombre y/o contraseña del usuario logueado.
+        Solo los campos enviados serán actualizados.
+      parameters:
+      - description: Campos a actualizar
+        in: body
+        name: datos
+        schema:
+          $ref: '#/definitions/models.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Perfil actualizado exitosamente
+          schema:
+            $ref: '#/definitions/models.UserProfileResponse'
+        "400":
+          description: Datos inválidos o error al encriptar
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar perfil del usuario autenticado
+      tags:
+      - Usuarios
+  /registro:
+    post:
+      consumes:
+      - application/json
+      description: Crea una cuenta de usuario con email y contraseña. La contraseña
+        se encripta automáticamente con bcrypt antes de guardar.
+      parameters:
+      - description: Datos de registro
+        in: body
+        name: usuario
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuario registrado exitosamente
+          schema:
+            $ref: '#/definitions/models.Usuario'
+        "400":
+          description: Datos inválidos o error al encriptar contraseña
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Registrar un nuevo usuario
+      tags:
+      - Auth
+  /tareas/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina permanentemente una tarea del sistema. Esta acción no se
+        puede deshacer.
+      parameters:
+      - description: ID de la tarea a eliminar
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tarea eliminada exitosamente
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+        "400":
+          description: ID de tarea inválido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Permisos insuficientes para eliminar
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Tarea no encontrada
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar una tarea
+      tags:
+      - Tareas
+    get:
+      consumes:
+      - application/json
+      description: Retorna los detalles completos de una tarea específica identificada
+        por su ID.
+      parameters:
+      - description: ID de la tarea
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tarea obtenida exitosamente
+          schema:
+            $ref: '#/definitions/models.Tarea'
+        "400":
+          description: ID de tarea inválido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Tarea no encontrada
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener una tarea por ID
+      tags:
+      - Tareas
+    put:
+      consumes:
+      - application/json
+      description: Permite modificar los campos de una tarea (título, descripción,
+        asignado, etc.). Solo campos enviados serán actualizados.
+      parameters:
+      - description: ID de la tarea
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Campos a actualizar
+        in: body
+        name: datos
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tarea'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tarea actualizada exitosamente
+          schema:
+            $ref: '#/definitions/models.Tarea'
+        "400":
+          description: ID inválido o datos incorrectos
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Tarea no encontrada
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar una tarea existente
+      tags:
+      - Tareas
+  /tareas/{id}/estado:
+    patch:
+      consumes:
+      - application/json
+      description: 'Actualiza únicamente el campo `estado` de una tarea. Valores permitidos:
+        "backlog", "pendiente", "en_progreso", "completada".'
+      parameters:
+      - description: ID de la tarea
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Nuevo estado de la tarea
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateEstadoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Estado actualizado exitosamente
+          schema:
+            $ref: '#/definitions/models.MessageResponse'
+        "400":
+          description: ID inválido, datos incorrectos o estado no permitido
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Tarea no encontrada
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Cambiar el estado de una tarea
+      tags:
+      - Tareas
+  /usuarios/buscar:
+    get:
+      consumes:
+      - application/json
+      description: Permite buscar un usuario existente usando su email. Útil para
+        verificar disponibilidad antes de registrar.
+      parameters:
+      - description: Email del usuario a buscar
+        example: ana@example.com
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuario encontrado
+          schema:
+            $ref: '#/definitions/models.UserProfileResponse'
+        "400":
+          description: Parámetro email faltante
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: No autenticado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Error interno del servidor
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buscar usuario por email
+      tags:
+      - Usuarios
 schemes:
 - http
 swagger: "2.0"
